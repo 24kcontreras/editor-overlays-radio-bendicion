@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#261920">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Control remoto · Radio Bendición</title>
+<link rel="stylesheet" href="/ui/remoto.css">
+</head>
+<body>
+<header class="barra">
+  <div class="marca">
+    <span class="marca-icono" aria-hidden="true">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4.9 19.1C1 15.2 1 8.8 4.9 4.9"/><path d="M7.8 16.2c-2.3-2.3-2.3-6.1 0-8.5"/><circle cx="12" cy="12" r="2"/><path d="M16.2 7.8c2.3 2.3 2.3 6.1 0 8.5"/><path d="M19.1 4.9C23 8.8 23 15.1 19.1 19"/></svg>
+    </span>
+    <div><strong>Radio Bendición</strong><span>Control remoto</span></div>
+  </div>
+  <span class="estado-vivo" id="estadoVivo" hidden></span>
+</header>
+
+<div class="aviso-cambio" id="avisoCambio" role="alertdialog" aria-live="assertive" hidden></div>
+<main id="contenido"></main>
+
+<nav class="pestanas" id="pestanas" hidden aria-label="Secciones"></nav>
+
+<div class="toast" id="toast" role="status" hidden></div>
+<script src="/ui/remoto.js"></script>
+</body>
+</html>

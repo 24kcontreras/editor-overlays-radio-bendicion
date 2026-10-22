@@ -1,0 +1,65 @@
+{
+  "name": "editor-overlays-radio-bendicion",
+  "productName": "Editor de Overlays",
+  "version": "1.1.0",
+  "description": "Edita los textos de los overlays de OBS de Radio Bendición sin tocar código.",
+  "main": "main.js",
+  "private": true,
+  "scripts": {
+    "start": "electron .",
+    "servidor": "node server.js ..",
+    "construir": "node preparar-instalador.js .. && electron-builder --win nsis",
+    "publicar": "node preparar-instalador.js .. && electron-builder --win nsis --publish always",
+    "fuentes": "node preparar-fuentes.js .."
+  },
+  "build": {
+    "appId": "cl.radiobendicion.editoroverlays",
+    "productName": "Editor de Overlays",
+    "files": [
+      "main.js",
+      "preload.js",
+      "server.js",
+      "overlay-parser.js",
+      "biblia.js",
+      "ytmusic.js",
+      "spotify.js",
+      "estudio.js",
+      "obs.js",
+      "instalacion.js",
+      "sincronizacion.js",
+      "ui/**",
+      "vendor/**",
+      "icono.png"
+    ],
+    "extraResources": [
+      { "from": "instalar", "to": "." }
+    ],
+    "win": {
+      "target": "nsis",
+      "icon": "icono.png"
+    },
+    "publish": [
+      { "provider": "github", "owner": "24kcontreras", "repo": "editor-overlays-radio-bendicion", "releaseType": "release" }
+    ],
+    "directories": {
+      "output": "dist"
+    },
+    "nsis": {
+      "oneClick": true,
+      "perMachine": false,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Editor de Overlays",
+      "artifactName": "Instalar Editor de Overlays.exe",
+      "runAfterFinish": true
+    },
+    "compression": "normal"
+  },
+  "dependencies": {
+    "electron-updater": "^6.6.2"
+  },
+  "devDependencies": {
+    "electron": "^44.9.2",
+    "electron-builder": "^26.15.3"
+  }
+}

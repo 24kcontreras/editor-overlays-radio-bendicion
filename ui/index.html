@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Editor de Overlays</title>
+<link rel="stylesheet" href="/fuentes/css?u=https%3A%2F%2Ffonts.googleapis.com%2Fcss2%3Ffamily%3DCormorant%2BGaramond%3Awght%40600%3B700%26display%3Dswap">
+<link rel="stylesheet" href="/ui/styles.css">
+</head>
+<body>
+<header class="barra">
+  <div class="marca">
+    <span class="marca-icono" aria-hidden="true">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4.9 19.1C1 15.2 1 8.8 4.9 4.9"/><path d="M7.8 16.2c-2.3-2.3-2.3-6.1 0-8.5"/><circle cx="12" cy="12" r="2"/><path d="M16.2 7.8c2.3 2.3 2.3 6.1 0 8.5"/><path d="M19.1 4.9C23 8.8 23 15.1 19.1 19"/></svg>
+    </span>
+    <div>
+      <strong>Editor de Overlays</strong>
+      <span>Radio Bendición</span>
+    </div>
+  </div>
+  <button class="btn btn-suave" id="btnAyuda" type="button">
+    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>
+    ¿Cómo lo agrego a OBS?
+  </button>
+</header>
+
+<div class="layout">
+  <nav class="lateral" aria-label="Overlays y herramientas">
+    <div class="lateral-scroll">
+      <p class="lateral-titulo">Transmisión</p>
+      <ul id="listaHerramientas" class="lista"></ul>
+      <p class="lateral-titulo">Tus overlays</p>
+      <ul id="listaOverlays" class="lista"></ul>
+    </div>
+    <div class="lateral-pie">
+      <button class="btn btn-suave btn-actualizar" id="btnActualizar" type="button" title="Vuelve a leer la carpeta: encuentra overlays nuevos y los cambios en los archivos">
+        <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg>
+        Actualizar archivos
+      </button>
+      <p class="carpeta" id="textoCarpeta" title=""></p>
+      <button class="btn btn-link" id="btnCarpeta" type="button">Cambiar carpeta…</button>
+      <p class="version-app" id="versionApp"></p>
+    </div>
+  </nav>
+
+  <main class="centro" id="centro">
+    <section class="vacio" id="vacio" hidden>
+      <h1>No encontré overlays</h1>
+      <p>Elige la carpeta donde guardaste los overlays exportados de Claude Design (los archivos que terminan en <code>.dc.html</code>).</p>
+      <button class="btn btn-primario" id="btnCarpetaVacio" type="button">Elegir carpeta de overlays</button>
+    </section>
+
+    <section id="herramienta" class="herramienta" hidden></section>
+
+    <section id="editor" hidden>
+      <div class="cabecera">
+        <div>
+          <h1 id="tituloOverlay"></h1>
+          <p class="estado" id="estadoOverlay"></p>
+        </div>
+        <div class="acciones">
+          <label class="interruptor auto" for="autoPublicar" title="Los cambios se envían solos a OBS unos segundos después de que dejas de escribir">
+            <span>Publicar automáticamente</span>
+            <input type="checkbox" id="autoPublicar" role="switch">
+          </label>
+          <button class="btn btn-suave" id="btnDescartar" type="button" title="Vuelve a dejar los textos como están ahora en OBS">Descartar cambios</button>
+          <button class="btn btn-primario btn-grande" id="btnPublicar" type="button" title="Atajo: Ctrl + Enter">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>
+            Publicar en OBS
+          </button>
+        </div>
+      </div>
+
+      <div class="vista">
+        <div class="vista-tabs" role="tablist">
+          <button role="tab" class="tab" data-canal="borrador" aria-selected="true">Vista previa de mis cambios</button>
+          <button role="tab" class="tab" data-canal="publicado" aria-selected="false">Lo que se ve ahora en OBS</button>
+        </div>
+        <div class="vista-marco" id="vistaMarco">
+          <iframe id="vistaFrame" title="Vista previa del overlay"></iframe>
+        </div>
+        <p class="vista-nota">El fondo gris y el texto «CÁMARA» solo aparecen aquí. En OBS esa zona es transparente.</p>
+      </div>
+
+      <div class="enlaces">
+        <h2>Enlace para OBS</h2>
+        <div id="listaEnlaces"></div>
+      </div>
+    </section>
+  </main>
+
+  <aside class="panel" id="panel" hidden>
+    <div class="panel-cabecera">
+      <h2>Textos y opciones</h2>
+      <span class="guardado" id="indicadorGuardado" aria-live="polite"></span>
+    </div>
+    <div class="buscar">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      <input type="search" id="buscar" placeholder="Buscar un texto…" autocomplete="off">
+    </div>
+    <form id="formulario" autocomplete="off" onsubmit="return false"></form>
+    <div class="panel-pie">
+      <button class="btn btn-link" id="btnRestaurar" type="button">Volver al diseño original</button>
+    </div>
+  </aside>
+</div>
+
+<div class="modal" id="modalAyuda" hidden>
+  <div class="modal-caja" role="dialog" aria-modal="true" aria-labelledby="ayudaTitulo">
+    <button class="modal-cerrar" type="button" data-cerrar aria-label="Cerrar">×</button>
+    <h2 id="ayudaTitulo">Cómo agregar un overlay a OBS</h2>
+    <p class="modal-intro">Solo hay que hacerlo <strong>una vez</strong> por overlay. Después, cada vez que publiques cambios, OBS se actualiza solo.</p>
+    <ol class="pasos">
+      <li><span>1</span><div>En esta app, elige el overlay y presiona <strong>Copiar enlace</strong>.</div></li>
+      <li><span>2</span><div>En OBS, en el cuadro <strong>Fuentes</strong>, haz clic en <strong>+</strong> y elige <strong>Navegador</strong>. Ponle un nombre, por ejemplo «Overlay Lateral».</div></li>
+      <li><span>3</span><div>En <strong>URL</strong>, borra lo que haya y pega el enlace (Ctrl + V).</div></li>
+      <li><span>4</span><div>Escribe <strong>Ancho 1920</strong> y <strong>Alto 1080</strong>. Presiona <strong>Aceptar</strong>.</div></li>
+      <li><span>5</span><div>Pon la fuente <strong>encima</strong> de tu cámara en la lista de Fuentes.</div></li>
+    </ol>
+    <div class="aviso">
+      <strong>Importante:</strong> deja esta app abierta mientras transmites. Si abriste OBS antes que la app y el overlay no aparece, haz clic derecho en la fuente → <strong>Actualizar</strong>.
+    </div>
+    <button class="btn btn-primario" type="button" data-cerrar>Entendido</button>
+  </div>
+</div>
+
+<div class="aviso-cambio" id="avisoCambio" role="alertdialog" aria-live="assertive" hidden></div>
+
+<div class="toast" id="toast" role="status" hidden></div>
+
+<script src="/vendor/qrcode.min.js"></script>
+<script src="/ui/app.js"></script>
+<script src="/ui/herramientas.js"></script>
+</body>
+</html>

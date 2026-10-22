@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Comentarios</title>
+<!-- Overlay propio del Editor: muestra en OBS el comentario que se elige en la app (o desde el celular).
+     Llega por /api/eventos sin recargar la página, entra con una animación y sale sola o al ocultarlo. -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Caprasimo:wght@400&family=Figtree:wght@400;600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&display=swap">
+<style>
+html, body { margin: 0; width: 1920px; height: 1080px; overflow: hidden; background: transparent; font-family: "Figtree", system-ui, sans-serif; }
+body.vista { background: #6b5a60; }
+.caja {
+  position: absolute; display: flex; align-items: stretch; max-width: 900px; min-width: 520px;
+  filter: drop-shadow(0 16px 32px rgba(0,0,0,.35));
+}
+.arriba-izquierda { left: 64px; top: 160px; }
+.arriba-derecha { right: 64px; top: 160px; }
+.abajo-izquierda { left: 64px; bottom: 120px; }
+.abajo-derecha { right: 64px; bottom: 120px; }
+.centro { left: 50%; top: 50%; transform: translate(-50%, -50%); }
+.icono {
+  flex: none; width: 104px; border-radius: 40px 0 0 40px; background: #b01e33;
+  display: grid; place-items: center;
+}
+.icono svg { width: 46px; height: 46px; }
+.cuerpo {
+  display: flex; flex-direction: column; justify-content: center; gap: 8px;
+  padding: 26px 48px 28px 34px; border-radius: 0 40px 40px 0; background: #f9f4ed; color: #261920; min-width: 0;
+}
+.nombre { font-size: 20px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: #b01e33; }
+.texto { font-family: "Cormorant Garamond", Georgia, serif; font-weight: 700; font-size: 44px; line-height: 1.08; }
+.texto.mediano { font-size: 36px; }
+.texto.chico { font-size: 30px; line-height: 1.15; }
+@keyframes entrar-izq { from { transform: translateX(-60px); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes entrar-der { from { transform: translateX(60px); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes salir { to { opacity: 0; transform: translateY(24px); } }
+@keyframes entrar-centro { from { transform: translate(-50%, -46%); opacity: 0; } to { transform: translate(-50%, -50%); opacity: 1; } }
+@keyframes salir-centro { to { opacity: 0; transform: translate(-50%, -46%); } }
+.caja.entra { animation: entrar-izq .7s ease both; }
+.caja.arriba-derecha.entra, .caja.abajo-derecha.entra { animation-name: entrar-der; }
+.caja.centro.entra { animation-name: entrar-centro; }
+.caja.sale { animation: salir .5s ease both; }
+.caja.centro.sale { animation-name: salir-centro; }
+</style>
+</head>
+<body>
+<script>/*DATOS*/</script>
+<script>
+(function () {
+  var ICONOS = {
+    youtube: '<path d="M2.5 17a24 24 0 0 1 0-10 2 2 0 0 1 1.4-1.4 49.6 49.6 0 0 1 16.2 0A2 2 0 0 1 21.5 7a24 24 0 0 1 0 10 2 2 0 0 1-1.4 1.4 49.6 49.6 0 0 1-16.2 0A2 2 0 0 1 2.5 17"></path><path d="m10 15 5-3-5-3z"></path>',
+    facebook: '<path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path>',
+    instagram: '<rect x="2" y="2" width="20" height="20" rx="5"></rect><circle cx="12" cy="12" r="4"></circle><path d="M17.5 6.5h.01"></path>',
+    tiktok: '<path d="M14 3v11.5a3.5 3.5 0 1 1-3.5-3.5"></path><path d="M14 3c.4 2.6 2.3 4.5 5 4.8"></path>',
+    whatsapp: '<path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"></path>',
+    "": '<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>'
+  };
+  var d = window.__comentarios || {};
+  var posicion = d.posicion || "arriba-izquierda", segundos = d.segundos || 0;
+  var caja = null, tSalir = null, actualId = null;
+  // Fuera de OBS (vista previa en la app) se ve un fondo para distinguir el diseño
+  if (!window.obsstudio && /[?&]vista=1/.test(location.search)) document.body.className = "vista";
+
+  function quitar(c) {
+    if (!c) return;
+    c.classList.remove("entra");
+    c.classList.add("sale");
+    setTimeout(function () { c.remove(); }, 520);
+  }
+
+  function mostrar(com) {
+    clearTimeout(tSalir);
+    if (!com) { quitar(caja); caja = null; actualId = null; return; }
+    if (com.id === actualId && caja) return;
+    quitar(caja);
+    actualId = com.id;
+    var c = document.createElement("div");
+    c.className = "caja entra " + posicion;
+    var largo = (com.texto || "").length;
+    c.innerHTML = '<span class="icono"><svg viewBox="0 0 24 24" fill="none" stroke="#f9f4ed" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">' + (ICONOS[com.fuente] || ICONOS[""]) + '</svg></span>' +
+      '<div class="cuerpo">' + (com.nombre ? '<span class="nombre"></span>' : '') + '<span class="texto ' + (largo > 180 ? "chico" : largo > 90 ? "mediano" : "") + '"></span></div>';
+    if (com.nombre) c.querySelector(".nombre").textContent = com.nombre;
+    c.querySelector(".texto").textContent = com.texto;
+    document.body.appendChild(c);
+    caja = c;
+    // Con «segundos» en 0, queda en pantalla hasta que se oculte desde la app
+    var resto = segundos > 0 ? segundos * 1000 - (Date.now() - (com.desde || Date.now())) : 0;
+    if (segundos > 0) {
+      if (resto <= 0) { c.remove(); caja = null; return; }
+      tSalir = setTimeout(function () { quitar(caja); caja = null; }, resto);
+    }
+  }
+
+  mostrar(d.actual);
+
+  function conectar() {
+    var es = new EventSource("/api/eventos");
+    es.onmessage = function (e) {
+      var m; try { m = JSON.parse(e.data); } catch (x) { return; }
+      if (m.tipo === "comentario") {
+        if (m.posicion) posicion = m.posicion;
+        if (m.segundos != null) segundos = m.segundos;
+        mostrar(m.comentario);
+      } else if (m.tipo === "comentario-config") {
+        segundos = m.segundos;
+        if (m.posicion !== posicion) {
+          posicion = m.posicion;
+          if (caja) { caja.className = "caja " + posicion; }
+        }
+      }
+    };
+    es.onerror = function () { es.close(); setTimeout(conectar, 3000); };
+  }
+  conectar();
+})();
+</script>
+</body>
+</html>
